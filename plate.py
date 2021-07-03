@@ -5,11 +5,19 @@ import numpy as np
 from urllib.request import urlopen
 import pandas as pd
 import re
+lak=[]
+code={"Andaman and Nicobar":"AN","Andhra Pradesh":"AP","Arunachal Pradesh":"AR","Assam":"AS","Bihar":"BR",
+"Chandigarh":"CH","Dadra and Nagar Haveli":"DN","Daman and Diu":"DD","Delhi":"DL","Goa":"GA","Gujarat":"GJ",
+"Haryana":"HR","Himachal Pradesh":"HP","Jammu and Kashmir":"JK","Karnataka":"KA","Kerala":"KL","Lakshadweep":"LD",
+"Madhya Pradesh":"MP","Maharashtra":"MH","Manipur":"MN","Meghalaya":"ML","Mizoram":"MZ","Nagaland":"NL",
+"Orissa":"OR","Pondicherry":"PY","Punjab":"PN","Rajasthan":"RJ","Sikkim":"SK","TamilNadu":"TN","Tripura":"TR",
+"Uttar Pradesh":"UP","West Bengal":"WB"}
 
 match_pattern="[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{4}$" # custom format for plate number sampling
+match_pattern1="[A-Z]{2}[0-9]{2}[A-Z]{1}[0-9]{4}$"
+
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 url="http://192.168.43.1:8080/shot.jpg"
-#img = cv2.imread("C:\\Users\\pc\\Desktop\\car.jpeg",cv2.IMREAD_COLOR)
 while True:
     imgResp=urlopen(url)
     imgNp=np.array(bytearray(imgResp.read()),dtype=np.uint8)
@@ -49,13 +57,25 @@ while True:
         text=text[:10]
         print(text,len(text))
         akm=re.match(match_pattern,text)
+        akm1=re.match(match_pattern1,text)
         print(bool(akm))
-        if(bool(akm)):
-            dicta=[text]
-            df=pd.DataFrame([dicta], columns=["plate_number"])
-            df.to_csv("PlateNumber.csv")
-            print("Detected license plate Number is:",text)
+        dict1=""
+        if(bool(akm)or bool(akm1)):
+            for (item,value) in code.items():
+                print(text[:2],value)
+                if(text[:2]==value):
+                   dict1=[item]
+            print(dict1)
+            if(dict1):
+                dicta=[text]
+                df=pd.DataFrame([[dicta,dict1]], columns=["plate_number","state-Name"])
+                df.to_csv("plate.csv")
+                df_homes = pd.read_csv("plate.csv")
+                df_homes1 = pd.read_csv("PlateNumber_complete.csv")
+                pd.concat([ df_homes1,df_homes]).to_csv('PlateNumber_complete.csv', index=False)
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):
         break
+for i in lak:
+    i.to_csv("PlateNumber.csv",index=1)
 cv2.destroyAllWindows()
